@@ -86,9 +86,12 @@ RUN touch /bin/nvidia-smi && \
     mkdir -p /var/run/nvidia-persistenced && \
     touch /var/run/nvidia-persistenced/socket
 
+# Upgrade pip to avoid packaging compatibility issues
+RUN ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install --upgrade pip
+
 # installing Isaac Lab dependencies
 # use pip caching to avoid reinstalling large packages
-RUN --mount=type=cache,target=${DOCKER_USER_HOME}/.cache/pip \
+RUN --mount=type=ssh --mount=type=cache,target=${DOCKER_USER_HOME}/.cache/pip \
     ${ISAACLAB_PATH}/isaaclab.sh --install
 
 # HACK: Remove install of quadprog dependency
