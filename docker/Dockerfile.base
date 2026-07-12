@@ -88,8 +88,15 @@ RUN touch /bin/nvidia-smi && \
 
 # installing Isaac Lab dependencies
 # use pip caching to avoid reinstalling large packages
+# NOTE: some Isaac Lab deps (e.g. flatdict) ship only an sdist with a legacy setup.py that does
+# `import pkg_resources`, which setuptools>=81 dropped. pip's build-isolation env otherwise pulls
+# the newest setuptools and the build fails with `ModuleNotFoundError: No module named
+# 'pkg_resources'`, leaving `isaaclab` itself uninstalled. Constrain the build env to
+# setuptools<81 (which still bundles pkg_resources) for this step only.
 RUN --mount=type=cache,target=${DOCKER_USER_HOME}/.cache/pip \
-    ${ISAACLAB_PATH}/isaaclab.sh --install
+    printf 'setuptools<81\n' > /tmp/pip-constraints.txt && \
+    PIP_CONSTRAINT=/tmp/pip-constraints.txt ${ISAACLAB_PATH}/isaaclab.sh --install && \
+    rm -f /tmp/pip-constraints.txt
 
 # HACK: Remove install of quadprog dependency
 RUN ${ISAACLAB_PATH}/isaaclab.sh -p -m pip uninstall -y quadprog
