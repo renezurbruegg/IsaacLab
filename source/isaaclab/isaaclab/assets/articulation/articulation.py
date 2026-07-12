@@ -113,6 +113,14 @@ class Articulation(AssetBase):
     def data(self) -> ArticulationData:
         return self._data
 
+    def _create_data(self):
+        """Create the data container for the articulation.
+
+        Overridable hook so subclasses can return a custom ArticulationData subclass (e.g.
+        graspqp's ArticulationModelData, which adds surface-point buffers).
+        """
+        return ArticulationData(self.root_physx_view, self.device)
+
     @property
     def num_instances(self) -> int:
         return self.root_physx_view.count
@@ -1574,8 +1582,9 @@ class Articulation(AssetBase):
         logger.info(f"Joint names: {self.joint_names}")
         logger.info(f"Number of fixed tendons: {self.num_fixed_tendons}")
 
-        # container for data access
-        self._data = ArticulationData(self.root_physx_view, self.device)
+        # container for data access (via overridable hook so subclasses can supply a custom
+        # ArticulationData subclass, e.g. graspqp's ArticulationModelData)
+        self._data = self._create_data()
 
         # create buffers
         self._create_buffers()
