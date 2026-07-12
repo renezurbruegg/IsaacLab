@@ -32,6 +32,7 @@ from isaaclab.sim import SimulationContext
 from isaaclab.sim.utils.stage import get_current_stage, get_current_stage_id
 from isaaclab.sim.views import XformPrimView
 from isaaclab.terrains import TerrainImporter, TerrainImporterCfg
+from isaaclab.ui.components.component_cfg import Component, ComponentCfg
 from isaaclab.utils.version import get_isaac_sim_version
 
 # Note: This is a temporary import for the VisuoTactileSensorCfg class.
@@ -133,6 +134,8 @@ class InteractiveScene:
         self._sensors = dict()
         self._surface_grippers = dict()
         self._extras = dict()
+        # UI components (e.g. ListComponent) added to the scene as `agent_ui`; used by graspqp.
+        self._ui_components = dict()
         # get stage handle
         self.sim = SimulationContext.instance()
         self.stage = get_current_stage()
@@ -670,6 +673,7 @@ class InteractiveScene:
             self._sensors,
             self._surface_grippers,
             self._extras,
+            self._ui_components,
         ]:
             all_keys += list(asset_family.keys())
         return all_keys
@@ -697,6 +701,7 @@ class InteractiveScene:
             self._sensors,
             self._surface_grippers,
             self._extras,
+            self._ui_components,
         ]:
             out = asset_family.get(key)
             # if found, return
@@ -796,6 +801,9 @@ class InteractiveScene:
                 # store xform prim view corresponding to this asset
                 # all prims in the scene are Xform prims (i.e. have a transform component)
                 self._extras[asset_name] = XformPrimView(asset_cfg.prim_path, device=self.device, stage=self.stage)
+            elif isinstance(asset_cfg, ComponentCfg):
+                # UI components (e.g. ListComponent) used by graspqp as `agent_ui`.
+                self._ui_components[asset_name] = asset_cfg.class_type(asset_cfg)
             else:
                 raise ValueError(f"Unknown asset config type for {asset_name}: {asset_cfg}")
             # store global collision paths
